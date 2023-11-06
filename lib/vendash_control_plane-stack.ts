@@ -1,16 +1,31 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as cdk from "aws-cdk-lib"
+import { Construct } from "constructs"
+import {
+  CodePipeline,
+  CodePipelineSource,
+  ShellStep,
+} from "aws-cdk-lib/pipelines"
+import { PipelineStage } from "./PipelineStage"
 
 export class VendashControlPlaneStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
-    super(scope, id, props);
+    super(scope, id, props)
 
-    // The code that defines your stack goes here
+    const pipeline = new CodePipeline(this, "AwesomePipeline", {
+      pipelineName: "awesomepipline",
+      synth: new ShellStep("Synth", {
+        input: CodePipelineSource.gitHub(
+          "ray836/vendash-control-plane",
+          "main"
+        ),
+        commands: ["npm ci", "npx cdk synth"],
+      }),
+    })
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'VendashControlPlaneQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    const testStage = pipeline.addStage(
+      new PipelineStage(this, "Pipeline", {
+        stageName: "test",
+      })
+    )
   }
 }
